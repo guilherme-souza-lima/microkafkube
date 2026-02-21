@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  db-m1:
+    image: postgres:latest
+    container_name: db-m1
+    networks:
+      - estudo-shared-net
+    environment:
+      - POSTGRES_USER=user-m1
+      - POSTGRES_PASSWORD=password-m1
+      - POSTGRES_DB=m1_db
+    ports:
+      - "5441:5432"

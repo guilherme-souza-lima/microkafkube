@@ -21,7 +21,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Post("/v1/register", container.Handler.Register)
-	r.Handle("/metrics", promhttp.Handler()) // Endpoint para o Prometheus coletar dados
+	r.Handle("/metrics", promhttp.Handler())
 
 	fmt.Printf("🚀 %s running on port %s\n", container.Config.ServerName, container.Config.ServerPort)
 	log.Fatal(http.ListenAndServe(":"+container.Config.ServerPort, r))

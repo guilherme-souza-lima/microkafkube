@@ -2,12 +2,10 @@ package process
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type RegisterDTO struct {
-	TraceID         uuid.UUID
+	TraceID         string
 	Payload         []byte
 	ByteSize        int
 	TotalCharacters int

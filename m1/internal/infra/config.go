@@ -7,17 +7,18 @@ import (
 )
 
 type Config struct {
-	Environment string
-	ServerPort  string
-	ServerName  string
-	DBHost      string
-	DBPort      string
-	DBUser      string
-	DBPassword  string
-	DBName      string
-	DBSSLMode   string
-	QueueBroker string
-	QueueTopic  string
+	Environment  string
+	ServerPort   string
+	ServerName   string
+	DBHost       string
+	DBPort       string
+	DBUser       string
+	DBPassword   string
+	DBName       string
+	DBSSLMode    string
+	QueueBroker  string
+	QueueTopic   string
+	OtelEndpoint string
 }
 
 func Load() *Config {
@@ -27,16 +28,17 @@ func Load() *Config {
 	}
 
 	return &Config{
-		Environment: os.Getenv("ENVIRONMENT"),
-		ServerPort:  os.Getenv("SERVER_PORT"),
-		ServerName:  os.Getenv("SERVER_NAME"),
-		DBHost:      os.Getenv("DB_HOST"),
-		DBPort:      os.Getenv("DB_PORT"),
-		DBUser:      os.Getenv("DB_USER"),
-		DBPassword:  os.Getenv("DB_PASSWORD"),
-		DBName:      os.Getenv("DB_NAME"),
-		DBSSLMode:   os.Getenv("DB_SSLMODE"),
-		QueueBroker: os.Getenv("KAFKA_BROKER"),
-		QueueTopic:  os.Getenv("KAFKA_TOPIC"),
+		Environment:  os.Getenv("ENVIRONMENT"),
+		ServerPort:   os.Getenv("SERVER_PORT"),
+		ServerName:   os.Getenv("SERVER_NAME"),
+		DBHost:       os.Getenv("DB_HOST"),
+		DBPort:       os.Getenv("DB_PORT"),
+		DBUser:       os.Getenv("DB_USER"),
+		DBPassword:   os.Getenv("DB_PASSWORD"),
+		DBName:       os.Getenv("DB_NAME"),
+		DBSSLMode:    os.Getenv("DB_SSLMODE"),
+		QueueBroker:  os.Getenv("KAFKA_BROKER"),
+		QueueTopic:   os.Getenv("KAFKA_TOPIC"),
+		OtelEndpoint: os.Getenv("OTEL_ENDPOINT"),
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"log"
 	"microum"
 	"microum/internal/jobs"
+	"microum/internal/observability"
 	"microum/internal/process"
 	"microum/queue"
 
@@ -19,17 +20,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel/sdk/trace"
 )
 
 type Container struct {
-	Config     *Config
-	DB         *sql.DB
-	Kafka      *queue.KafkaAdapter
-	RegCounter prometheus.Counter
-	ErrCounter prometheus.Counter
-	Repository *process.Repository
-	Service    *process.Service
-	Handler    *process.Handler
+	Config         *Config
+	DB             *sql.DB
+	TracerProvider *trace.TracerProvider
+	Tracer         *observability.AppTracer
+	Kafka          *queue.KafkaAdapter
+	RegCounter     prometheus.Counter
+	ErrCounter     prometheus.Counter
+	Repository     *process.Repository
+	Service        *process.Service
+	Handler        *process.Handler
 }
 
 func NewContainer(config *Config, ctx context.Context) *Container {
@@ -94,6 +98,20 @@ func (container *Container) buildMigration() {
 	}
 
 	log.Println("✅ Migrations executed successfully!")
+}
+
+func (container *Container) buildTracer(ctx context.Context) {
+	// endpoint seria algo como "localhost:4317"
+	tp, err := observability.InitGlobalTracer(ctx, container.Config.ServerName, container.Config.OtelEndpoint)
+	if err != nil {
+		log.Fatalf("Erro ao iniciar Tracer: %v", err)
+	}
+
+	// Guardamos o provider no container para dar Close() depois
+	container.TracerProvider = tp
+
+	// Injetamos a struct de trabalho
+	container.Tracer = observability.NewAppTracer(container.Config.ServerName)
 }
 
 func (container *Container) buildKafka() {

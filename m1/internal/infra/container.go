@@ -1,16 +1,20 @@
 package infra
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
+	"microum"
+	"microum/internal/jobs"
 	"microum/internal/process"
 	"microum/queue"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -28,7 +32,7 @@ type Container struct {
 	Handler    *process.Handler
 }
 
-func NewContainer(config *Config) *Container {
+func NewContainer(config *Config, ctx context.Context) *Container {
 	container := &Container{}
 	container.Config = config
 
@@ -39,6 +43,7 @@ func NewContainer(config *Config) *Container {
 	container.buildRepository()
 	container.buildService()
 	container.buildHandler()
+	container.startJobs(ctx)
 
 	log.Printf("Infra iniciada: DB na porta %s e Kafka no tópico %s",
 		container.Config.DBPort, container.Config.QueueTopic)
@@ -64,23 +69,31 @@ func (container *Container) buildDB() {
 }
 
 func (container *Container) buildMigration() {
-	driver, err := postgres.WithInstance(container.DB, &postgres.Config{})
+	sourceDriver, err := iofs.New(microum.MigrationsFS, "migrations")
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("could not create source driver: %w", err))
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://m1/migrations",
-		"postgres", driver)
+	dbDriver, err := postgres.WithInstance(container.DB, &postgres.Config{})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("could not create database driver: %w", err))
+	}
+
+	m, err := migrate.NewWithInstance(
+		"iofs",
+		sourceDriver,
+		"postgres",
+		dbDriver,
+	)
+	if err != nil {
+		panic(fmt.Errorf("could not create migrate instance: %w", err))
 	}
 
 	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		panic(err)
 	}
 
-	log.Println("Migrations executed successfully!")
+	log.Println("✅ Migrations executed successfully!")
 }
 
 func (container *Container) buildKafka() {
@@ -115,6 +128,10 @@ func (container *Container) buildService() {
 
 func (container *Container) buildHandler() {
 	container.Handler = process.NewHandler(container.Service)
+}
+
+func (container *Container) startJobs(ctx context.Context) {
+	go jobs.NewOutboxJob(container.Repository, container.Kafka, container.ErrCounter).Start(ctx)
 }
 
 func (container *Container) Close() {}

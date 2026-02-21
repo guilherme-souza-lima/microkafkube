@@ -6,6 +6,11 @@ import (
 	"fmt"
 )
 
+type OutboxRepository interface {
+	GetPendingRegistrations(ctx context.Context) ([]RegistrationDTO, error)
+	UpdatePublishedStatus(ctx context.Context, traceID string) error
+}
+
 type RepositoryInterface interface {
 	Register(ctx context.Context, dto RegisterDTO) error
 	UpdatePublishedStatus(ctx context.Context, traceID string) error
@@ -44,4 +49,34 @@ func (r *Repository) UpdatePublishedStatus(ctx context.Context, traceID string) 
 	}
 
 	return nil
+}
+
+func (r *Repository) GetPendingRegistrations(ctx context.Context) ([]RegistrationDTO, error) {
+	query := GetByPublishedFalseQuery()
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch pending registrations: %w", err)
+	}
+	defer rows.Close()
+
+	var registrations []RegistrationDTO
+	for rows.Next() {
+		var reg RegistrationDTO
+		err := rows.Scan(
+			&reg.TraceID,
+			&reg.Payload,
+			&reg.ByteSize,
+			&reg.TotalCharacters,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan registration: %w", err)
+		}
+		registrations = append(registrations)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return registrations, nil
 }

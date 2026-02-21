@@ -12,3 +12,7 @@ services:
       - POSTGRES_DB=m1_db
     ports:
       - "5441:5432"
+
+networks:
+  estudo-shared-net:
+    external: true

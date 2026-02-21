@@ -43,16 +43,19 @@ func (s *Service) Register(ctx context.Context, data []byte) (ResponseRegisterDT
 	}
 
 	s.regCounter.Inc()
-	kafkaCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
 
-	err = s.messaging.Publish(kafkaCtx, traceID.String(), data)
-	if err == nil {
-		_ = s.repository.UpdatePublishedStatus(context.Background(), traceID.String())
-	} else {
-		s.errCounter.Inc()
-		fmt.Printf("⚠️ Queue delivery failed: %v\n", err)
-	}
+	go func(tID string, payload []byte) {
+		kafkaCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		err := s.messaging.Publish(kafkaCtx, tID, payload)
+		if err == nil {
+			_ = s.repository.UpdatePublishedStatus(context.Background(), tID)
+		} else {
+			s.errCounter.Inc()
+			fmt.Printf("⚠️ Background Queue delivery failed for %s: %v\n", tID, err)
+		}
+	}(traceID.String(), data)
 
 	return ResponseRegisterDTO{
 		TraceID: traceID.String(),

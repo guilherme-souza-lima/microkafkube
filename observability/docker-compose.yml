@@ -1,0 +1,16 @@
+services:
+  # Jaeger: A interface onde você vai ver os gráficos dos Traces
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # Interface Web (UI)
+      - "4317:4317"   # OTLP gRPC (Onde o seu M1 vai mandar os dados)
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - estudo-shared-net
+
+networks:
+  estudo-shared-net:
+    external: true

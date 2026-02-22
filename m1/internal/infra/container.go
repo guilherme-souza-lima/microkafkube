@@ -44,6 +44,7 @@ func NewContainer(config *Config, ctx context.Context) *Container {
 	container.buildMigration()
 	container.buildKafka()
 	container.buildPrometheus()
+	container.buildTracer(ctx)
 	container.buildRepository()
 	container.buildService()
 	container.buildHandler()
@@ -101,16 +102,12 @@ func (container *Container) buildMigration() {
 }
 
 func (container *Container) buildTracer(ctx context.Context) {
-	// endpoint seria algo como "localhost:4317"
 	tp, err := observability.InitGlobalTracer(ctx, container.Config.ServerName, container.Config.OtelEndpoint)
 	if err != nil {
 		log.Fatalf("Erro ao iniciar Tracer: %v", err)
 	}
 
-	// Guardamos o provider no container para dar Close() depois
 	container.TracerProvider = tp
-
-	// Injetamos a struct de trabalho
 	container.Tracer = observability.NewAppTracer(container.Config.ServerName)
 }
 
@@ -141,7 +138,7 @@ func (container *Container) buildRepository() {
 }
 
 func (container *Container) buildService() {
-	container.Service = process.NewService(container.Repository, container.RegCounter, container.ErrCounter, container.Kafka)
+	container.Service = process.NewService(container.Repository, container.RegCounter, container.ErrCounter, container.Kafka, container.Tracer)
 }
 
 func (container *Container) buildHandler() {

@@ -1,6 +1,5 @@
 package process
 
-// RegisterQuery returns the SQL for inserting a new record
 func RegisterQuery() string {
 	return `
         INSERT INTO registros 

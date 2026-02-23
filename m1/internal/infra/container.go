@@ -115,7 +115,7 @@ func (container *Container) buildKafka() {
 	kafkaWriter := &kafka.Writer{
 		Addr:     kafka.TCP(container.Config.QueueBroker),
 		Topic:    container.Config.QueueTopic,
-		Balancer: &kafka.LeastBytes{}, // Distribui mensagens entre partições
+		Balancer: &kafka.LeastBytes{},
 	}
 
 	container.Kafka = queue.NewKafkaAdapter(kafkaWriter)

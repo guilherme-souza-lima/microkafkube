@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  db-m2:
+    image: mongodb/mongodb-community-server:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - estudo-shared-net
+
+networks:
+  estudo-shared-net:
+    external: true

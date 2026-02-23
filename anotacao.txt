@@ -1,0 +1,9 @@
+curl -X POST http://localhost:6441/v1/register \
+     -H "Content-Type: application/json" \
+     -d '{
+           "name": "Teste de Observabilidade",
+           "email": "gui@exemplo.com",
+           "document": "123456789",
+           "description": "Validando o rastro no Jaeger e a fila no Kafka"
+         }'
+{"trace_id":"b14212a0a7ea3d98427dfe165647a145"}

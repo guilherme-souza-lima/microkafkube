@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"microum/internal/observability"
-	"microum/queue"
+	"microum/internal/queue"
 	"time"
 	"unicode/utf8"
 

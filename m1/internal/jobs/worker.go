@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"microum/internal/process"
-	"microum/queue"
+	"microum/internal/queue"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"

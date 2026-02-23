@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 type KafkaAdapterInterface interface {
@@ -19,8 +21,21 @@ func NewKafkaAdapter(writer *kafka.Writer) *KafkaAdapter {
 }
 
 func (a *KafkaAdapter) Publish(ctx context.Context, key string, payload []byte) error {
-	return a.writer.WriteMessages(ctx, kafka.Message{
+	msg := kafka.Message{
 		Key:   []byte(key),
 		Value: payload,
-	})
+	}
+
+	carrier := propagation.HeaderCarrier{}
+	otel.GetTextMapPropagator().Inject(ctx, carrier)
+	for k, v := range carrier {
+		if len(v) > 0 {
+			msg.Headers = append(msg.Headers, kafka.Header{
+				Key:   k,
+				Value: []byte(v[0]),
+			})
+		}
+	}
+
+	return a.writer.WriteMessages(ctx, msg)
 }

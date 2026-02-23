@@ -10,7 +10,7 @@ import (
 	"microum/internal/jobs"
 	"microum/internal/observability"
 	"microum/internal/process"
-	"microum/queue"
+	"microum/internal/queue"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
